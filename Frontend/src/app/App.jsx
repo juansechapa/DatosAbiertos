@@ -22,6 +22,7 @@ export default function App() {
   const [rangoProfundidad, setRangoProfundidad] = useState('')
   const [orden, setOrden] = useState('-fecha_hora')
   const [sismoDetalle, setSismoDetalle] = useState(null)
+  const [mostrarModalBorrado, setMostrarModalBorrado] = useState(false)
 
   const [estadisticas, setEstadisticas] = useState(null)
   const [cargandoStats, setCargandoStats] = useState(false)
@@ -127,11 +128,12 @@ export default function App() {
     }
   }
 
-  async function ejecutarBorrado() {
-    if (!window.confirm('¿Seguro que deseas eliminar TODOS los sismos de la base de datos?')) {
-      return
-    }
+  function abrirModalBorrado() {
+    setMostrarModalBorrado(true)
+  }
 
+  async function confirmarBorrado() {
+    setMostrarModalBorrado(false)
     setResultadoProtegido({ cargando: true, accion: 'borrar' })
     try {
       const { datos, respuesta } = await pedirOExplotar(`${API_URL}/borrar-datos/`, {
@@ -551,24 +553,19 @@ function calcularEnergiaSimulador(mag) {
               <button
                 className="boton"
                 type="button"
-                style={{ background: 'var(--rojo)', color: 'white', borderColor: 'var(--rojo)' }}
-                onClick={ejecutarBorrado}
+                style={{ background: 'var(--rojo)', color: '#080b14', borderColor: 'var(--rojo)', fontWeight: 600 }}
+                onClick={abrirModalBorrado}
                 disabled={resultadoProtegido?.cargando}
               >
                 {resultadoProtegido?.cargando && resultadoProtegido.accion === 'borrar'
                   ? 'Eliminando registros...'
-                  : 'Borrar Todos los Sismos'}
+                  : '🗑️ Borrar Todos los Sismos'}
               </button>
             </div>
             {resultadoProtegido && !resultadoProtegido.cargando && (
               <div
-                style={{
-                  marginTop: '16px',
-                  padding: '12px',
-                  borderRadius: '4px',
-                  background: resultadoProtegido.exito ? '#eaf5ea' : '#fde8e8',
-                  color: resultadoProtegido.exito ? 'var(--verde)' : 'var(--rojo)',
-                }}
+                className={`alerta ${resultadoProtegido.exito ? 'alerta-exito' : 'alerta-error'}`}
+                style={{ marginTop: '20px' }}
               >
                 <strong>Status {resultadoProtegido.status}:</strong> {resultadoProtegido.mensaje}
               </div>
@@ -576,6 +573,68 @@ function calcularEnergiaSimulador(mag) {
           </section>
         )}
       </main>
+
+      {/* Modal estilizado de confirmación para eliminar sismos */}
+      {mostrarModalBorrado && (
+        <div className="modal-overlay" onClick={() => setMostrarModalBorrado(false)}>
+          <div
+            className="modal"
+            style={{ maxWidth: '450px', borderTop: '4px solid var(--rojo)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  background: 'var(--rojo-bg)',
+                  color: 'var(--rojo)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '22px',
+                  flexShrink: 0,
+                  border: '1px solid rgba(248, 113, 113, 0.3)',
+                }}
+              >
+                ⚠️
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>¿Eliminar todos los sismos?</h3>
+                <small style={{ color: 'var(--texto-suave)' }}>Operación administrativa irreversible</small>
+              </div>
+            </div>
+
+            <p style={{ color: 'var(--texto-suave)', fontSize: '13px', lineHeight: 1.6, margin: '0 0 24px' }}>
+              Esta acción vaciará por completo la tabla de sismos en PostgreSQL. Se eliminarán permanentemente los registros de la base de datos. ¿Confirmas que deseas proceder?
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                className="boton boton-secundario"
+                onClick={() => setMostrarModalBorrado(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="boton"
+                style={{
+                  background: 'var(--rojo)',
+                  borderColor: 'var(--rojo)',
+                  color: '#080b14',
+                  fontWeight: 700,
+                }}
+                onClick={confirmarBorrado}
+              >
+                🗑️ Sí, eliminar todo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {sismoDetalle && (
         <div className="modal-overlay" onClick={() => setSismoDetalle(null)}>
