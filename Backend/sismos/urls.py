@@ -14,6 +14,4 @@ urlpatterns = [
     path('importar-datos/', ImportarDatosView.as_view(), name='importar_datos'),
     path('borrar-datos/', BorrarDatosView.as_view(), name='borrar_datos'),
     path('operacion-protegida/', ImportarDatosView.as_view()),
-
-    re_path(r'^(?!api/|admin/|static/).*$', TemplateView.as_view(template_name='index.html')),
 ]
